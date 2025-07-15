@@ -1,4 +1,245 @@
 /* Custom Instructor Dashboard Styles */
+
+/* Base Styles */
+.learndash-custom-dashboard {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #333;
+}
+
+/* Header */
+.dashboard-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.dashboard-header h1 {
+    margin: 0 0 0.5rem;
+    color: #23282d;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.dashboard-header p {
+    margin: 0;
+    color: #646970;
+}
+
+/* Group Selector */
+.group-selector {
+    margin-bottom: 2rem;
+}
+
+.group-selector label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.group-selector select {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.5rem;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Group Content */
+#group-content {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+/* Group Info */
+.group-info {
+    padding: 1.5rem;
+    border-bottom: 1px solid #dcdcde;
+    background-color: #f6f7f7;
+}
+
+.group-title {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.group-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.students-count,
+.courses-count {
+    text-align: center;
+}
+
+.students-count .count,
+.courses-count .count {
+    display: block;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2271b1;
+    line-height: 1;
+}
+
+.students-count .label,
+.courses-count .label {
+    font-size: 0.875rem;
+    color: #646970;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Students and Courses Sections */
+.group-students,
+.group-courses {
+    padding: 1.5rem;
+}
+
+.group-students {
+    border-bottom: 1px solid #dcdcde;
+}
+
+.group-students h3,
+.group-courses h3 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    color: #1d2327;
+}
+
+/* Student List */
+.student-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.student-item {
+    padding: 1rem;
+    background: #f6f7f7;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.student-item:hover {
+    background: #f0f0f1;
+    transform: translateY(-2px);
+}
+
+.student-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.student-email {
+    display: block;
+    color: #2271b1;
+    text-decoration: none;
+    font-size: 0.875rem;
+    word-break: break-all;
+}
+
+.student-email:hover {
+    text-decoration: underline;
+}
+
+/* Course List */
+.course-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.course-item {
+    padding: 0;
+}
+
+.course-title {
+    display: block;
+    padding: 1rem;
+    background: #f6f7f7;
+    color: #2271b1;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.course-title:hover {
+    background: #f0f0f1;
+    color: #135e96;
+    text-decoration: underline;
+}
+
+/* No Data Message */
+.no-data {
+    color: #646970;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Loading State */
+.loading {
+    padding: 2rem;
+    text-align: center;
+    color: #646970;
+}
+
+/* Error Message */
+.error-message {
+    padding: 2rem;
+    text-align: center;
+    color: #d63638;
+    background: #fcf0f1;
+    border-left: 4px solid #d63638;
+}
+
+.error-message .dashicons {
+    font-size: 2rem;
+    height: auto;
+    width: auto;
+    margin-bottom: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 782px) {
+    .learndash-custom-dashboard {
+        padding: 1rem;
+    }
+    
+    .group-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .student-list,
+    .course-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* RTL Support */
+.rtl .error-message {
+    border-left: none;
+    border-right: 4px solid #d63638;
+} Dashboard Styles */
 .custom-instructor-dashboard {
     max-width: 1200px;
     margin: 2rem auto;
@@ -85,24 +326,195 @@
     }
 }
 
-/* Loading States */
-.loading {
-    text-align: center;
-    padding: 2rem;
+/* Gradebook Stats */
+.gradebook-stats {
+    margin: 2rem 0;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.loading::before {
-    content: "";
-    display: inline-block;
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.gradebook-stats-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #dcdcde;
+    background-color: #f6f7f7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.gradebook-stats-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1d2327;
+}
+
+.gradebook-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.gradebook-stat {
+    background: #f6f7f7;
+    border-radius: 4px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.gradebook-stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2271b1;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.gradebook-stat-label {
+    font-size: 0.875rem;
+    color: #646970;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Quiz Stats Table */
+.quiz-stats-container {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.quiz-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 0.9375rem;
+}
+
+.quiz-stats-table th,
+.quiz-stats-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.quiz-stats-table th {
+    background-color: #f6f7f7;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.quiz-stats-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.overall-average {
+    padding: 1rem;
+    background: #f0f7ff;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #135e96;
+    margin-top: 1.5rem;
+}
+
+/* Export Controls */
+.export-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #2271b1;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid #135e96;
+}
+
+.export-btn:hover {
+    background: #135e96;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.export-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.export-status {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #2271b1;
+    min-height: 1.5rem;
+}
+
+/* Loading States */
+.ld-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    color: #646970;
+}
+
+.ld-loading .spinner {
+    float: none;
+    margin: 0;
+    visibility: visible;
 }
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 782px) {
+    .gradebook-stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .export-controls {
+        flex-direction: column;
+    }
+    
+    .export-btn {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .gradebook-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .gradebook-stats-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .export-controls {
+        width: 100%;
+    }
+    
+    .export-btn {
+        width: 100%;
+        text-align: center;
+    }
 }
