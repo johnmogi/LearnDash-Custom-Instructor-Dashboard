@@ -129,23 +129,53 @@ class LearnDash_Custom_Dashboard {
         );
     }
     
-    /**
-     * Render the dashboard content via shortcode
-     */
-    public function render_dashboard_content() {
-        // Check if user is instructor
-        if (!$this->is_instructor()) {
-            return '<p>' . esc_html__('You do not have permission to view this dashboard.', 'learndash-custom-dashboard') . '</p>';
+    private function render_dashboard_content() {
+        // Get instructor groups
+        $groups = $this->get_instructor_groups();
+        
+        if (empty($groups)) {
+            return '<p>' . esc_html__('No groups assigned to your account.', 'learndash-custom-dashboard') . '</p>';
         }
         
-        // Initialize grade calculator if needed
-        if (!isset($this->grade_calculator)) {
-            $this->init_grade_calculator();
-        }
+        // Assets should already be enqueued via wp_enqueue_scripts hook
         
-        // Include the template file that handles all the teacher dashboard display
         ob_start();
-        include plugin_dir_path(__FILE__) . 'templates/dashboard.php';
+        ?>
+        <div class="learndash-custom-dashboard">
+            <div class="dashboard-header">
+                <h1><?php esc_html_e('Instructor Dashboard', 'learndash-custom-dashboard'); ?></h1>
+                <p><?php esc_html_e('Manage your classes and view student progress', 'learndash-custom-dashboard'); ?></p>
+            </div>
+            
+            <div class="group-selector">
+                <label for="group-select"><?php esc_html_e('Select Class:', 'learndash-custom-dashboard'); ?></label>
+                <select id="group-select">
+                    <option value=""><?php esc_html_e('-- Select a Class --', 'learndash-custom-dashboard'); ?></option>
+                    <?php foreach ($groups as $group_id => $group_name) : ?>
+                        <option value="<?php echo esc_attr($group_id); ?>"><?php echo esc_html($group_name); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div id="group-content">
+                <div class="group-info">
+                    <div class="group-title"></div>
+                    <div class="group-stats">
+                        <div class="students-count">
+                            <span class="count">0</span>
+                            <span class="label"><?php esc_html_e('Students', 'learndash-custom-dashboard'); ?></span>
+                        </div>
+                        <div class="courses-count">
+                            <span class="count">0</span>
+                            <span class="label"><?php esc_html_e('Courses', 'learndash-custom-dashboard'); ?></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="group-students"></div>
+                <div class="group-courses"></div>
+            </div>
+        </div>
+        <?php
         return ob_get_clean();
     }
     
@@ -160,7 +190,8 @@ class LearnDash_Custom_Dashboard {
             return '<p>' . __('You do not have permission to access this dashboard.', 'learndash-custom-dashboard') . '</p>';
         }
         
-        // Assets should already be enqueued via wp_enqueue_scripts hook
+        // Enqueue assets
+        $this->enqueue_assets();
         
         // Start output buffering
         ob_start();
@@ -501,19 +532,10 @@ class LearnDash_Custom_Dashboard {
     }
     
     private function get_group_data($group_id) {
-        // Use our new teacher dashboard methods to get comprehensive data
-        if (!$this->grade_calculator) {
-            $this->init_grade_calculator();
-        }
-        
-        // Get detailed student data (includes quiz performance)
-        $student_details = $this->grade_calculator->get_group_student_details($group_id);
-        
-        // Get latest activity for the group
-        $latest_activity = $this->grade_calculator->get_group_latest_activity($group_id);
-        
-        // Still get basic group data from LearnDash
+        // Get group courses
         $courses = learndash_group_enrolled_courses($group_id);
+        
+        // Get group users
         $users = learndash_get_groups_users($group_id);
         
         // Prepare response data
@@ -522,19 +544,19 @@ class LearnDash_Custom_Dashboard {
             'group_name' => get_the_title($group_id),
             'courses' => array(),
             'students' => array(),
-            'latest_activity' => $latest_activity,
             'stats' => array(
-                'total_courses' => count($courses),
-                'total_students' => count($users),
+                'total_courses' => 0,
+                'total_students' => 0,
                 'total_completed' => 0,
                 'total_in_progress' => 0,
                 'total_not_started' => 0,
-                'average_score' => $this->grade_calculator->get_group_average($group_id)
             )
         );
         
         // Process courses
         if (!empty($courses)) {
+            $data['stats']['total_courses'] = count($courses);
+            
             foreach ($courses as $course_id) {
                 $data['courses'][$course_id] = array(
                     'id' => $course_id,
@@ -547,31 +569,23 @@ class LearnDash_Custom_Dashboard {
             }
         }
         
-        // Process users with enhanced data from our student details
+        // Process users
         if (!empty($users)) {
+            $data['stats']['total_students'] = count($users);
+            
             foreach ($users as $user) {
-                $user_id = $user->ID;
                 $user_data = array(
-                    'id' => $user_id,
+                    'id' => $user->ID,
                     'name' => $user->display_name,
                     'email' => $user->user_email,
                     'courses' => array()
                 );
                 
-                // Add enhanced quiz performance data if available
-                if (isset($student_details[$user_id])) {
-                    $user_data['average_score'] = $student_details[$user_id]['average_score'];
-                    $user_data['quizzes_taken'] = $student_details[$user_id]['quizzes_taken'];
-                    $user_data['quizzes_passed'] = $student_details[$user_id]['quizzes_passed'];
-                    $user_data['last_activity'] = $student_details[$user_id]['last_activity'];
-                    $user_data['quiz_details'] = $student_details[$user_id]['quiz_details'];
-                }
-                
                 // Get user's course progress
                 if (!empty($courses)) {
                     foreach ($courses as $course_id) {
-                        $course_completed = learndash_course_completed($user_id, $course_id);
-                        $progress = learndash_user_get_course_progress($user_id, $course_id, 'summary');
+                        $course_completed = learndash_course_completed($user->ID, $course_id);
+                        $progress = learndash_user_get_course_progress($user->ID, $course_id, 'summary');
                         
                         $status = 'not_started';
                         if ($course_completed) {
@@ -590,7 +604,7 @@ class LearnDash_Custom_Dashboard {
                         $user_data['courses'][$course_id] = array(
                             'status' => $status,
                             'progress' => $progress,
-                            'last_activity' => isset($student_details[$user_id]['last_activity']) ? $student_details[$user_id]['last_activity'] : ''
+                            'last_activity' => get_user_meta($user->ID, 'learndash_last_activity', true)
                         );
                     }
                 }
@@ -653,39 +667,14 @@ class LearnDash_Custom_Dashboard {
             }
         }
         
-        // Make sure grade calculator is initialized
-        if (!$this->grade_calculator) {
-            $this->init_grade_calculator();
-        }
-        
-        // Get group average using our enhanced method
+        // Get group average
         $average = $this->grade_calculator->get_group_average($group_id);
-        
-        // Get additional group data for the dashboard
-        $teacher_id = get_current_user_id();
-        $group_summary = null;
-        
-        // If the user is a teacher, get the group summary data
-        if ($this->is_instructor()) {
-            $group_summaries = $this->grade_calculator->get_teacher_groups_summary($teacher_id);
-            foreach ($group_summaries as $summary) {
-                if ($summary['id'] == $group_id) {
-                    $group_summary = $summary;
-                    break;
-                }
-            }
-        }
         
         // Format the response
         $response = array(
             'raw' => $average,
             'formatted' => $average !== 'N/A' ? $average . '%' : 'N/A'
         );
-        
-        // Add group summary data if available
-        if ($group_summary) {
-            $response['summary'] = $group_summary;
-        }
         
         wp_send_json_success($response);
     }
@@ -727,8 +716,8 @@ class LearnDash_Custom_Dashboard {
             }
         }
         
-        // Get detailed quiz stats using our new method
-        $quiz_stats = $this->grade_calculator->get_group_quiz_detailed_stats($group_id);
+        // Get quiz stats
+        $quiz_stats = $this->grade_calculator->get_group_quiz_stats($group_id);
         
         wp_send_json_success($quiz_stats);
     }

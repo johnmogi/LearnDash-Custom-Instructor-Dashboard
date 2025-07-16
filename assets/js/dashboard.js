@@ -13,15 +13,27 @@ jQuery(document).ready(function($) {
     const $groupAverage = $('#group-average');
     const $quizzesCount = $('#quizzes-count');
     const $quizStats = $('#quiz-stats');
-    const $exportSummary = $('#export-summary');
-    const $exportDetailed = $('#export-detailed');
-    const $exportStatus = $('#export-status');
     const $loading = $('<div class="ld-loading"><span class="spinner is-active"></span> Loading...</div>');
 
-    // Handle group selection change
-    $groupSelect.on('change', function() {
-        const groupId = $(this).val();
+    // Initialize
+    init();
+    
+    function init() {
+        // Set up event handlers
+        $groupSelect.on('change', handleGroupChange);
         
+        // Initial load if group is preselected
+        if ($groupSelect.val()) {
+            loadGroupData($groupSelect.val());
+        }
+    }
+
+    /**
+     * Handle group selection change
+     */
+    function handleGroupChange() {
+        const groupId = $groupSelect.val();
+
         if (!groupId) {
             resetGroupContent();
             $gradebookStats.hide();
@@ -31,11 +43,11 @@ jQuery(document).ready(function($) {
         $gradebookStats.show();
         loadGroupData(groupId);
         loadGradebookStats(groupId);
-    });
+    }
 
     /**
      * Load group data via AJAX
-     * @param {number} groupId - The ID of the group to load
+     * @param {string} groupId - The ID of the group to load
      */
     function loadGroupData(groupId) {
         // Show loading state
@@ -43,29 +55,68 @@ jQuery(document).ready(function($) {
         $groupContent.html($loading);
 
         console.log('Loading group data for ID:', groupId);
+        console.log('AJAX URL:', customDashboard.ajaxurl);
+        console.log('Nonce:', customDashboard.nonce);
         
+        // Clear any previous errors
+        $groupContent.find('.error-message').remove();
+        
+        // Create the data object
+        const data = {
+            action: 'load_group_content',
+            group_id: groupId,
+            nonce: customDashboard.nonce
+        };
+        
+        console.log('Sending AJAX request with data:', data);
+        
+        // Make the AJAX request
         $.ajax({
             url: customDashboard.ajaxurl,
             type: 'POST',
-            data: {
-                action: 'load_group_content',
-                group_id: groupId,
-                nonce: customDashboard.nonce
-            },
+            data: data,
             dataType: 'json',
             success: function(response) {
-                console.log('AJAX Response:', response);
-                if (response.success && response.data) {
+                console.log('AJAX Success Response:', response);
+                if (response && response.success && response.data) {
                     updateGroupContent(response.data);
                 } else {
-                    const errorMsg = response.data && response.data.message ? response.data.message : 'Failed to load group data';
+                    const errorMsg = response && response.data && response.data.message ? 
+                        response.data.message : 'Failed to load group data';
                     showError(errorMsg);
                 }
                 $groupContent.removeClass('loading');
             },
             error: function(xhr, status, error) {
                 console.error('AJAX Error:', status, error);
-                showError('Error loading group data. Please try again.');
+                console.error('Response Text:', xhr.responseText);
+                console.error('Response Status:', xhr.status);
+                console.error('Response Headers:', xhr.getAllResponseHeaders());
+                
+                let errorMessage = 'Error loading group data';
+                
+                try {
+                    // Try to parse the response as JSON
+                    if (xhr.responseText && xhr.responseText.trim() !== '') {
+                        const jsonResponse = JSON.parse(xhr.responseText);
+                        if (jsonResponse && jsonResponse.data && jsonResponse.data.message) {
+                            errorMessage = jsonResponse.data.message;
+                        }
+                    } else if (xhr.status === 400) {
+                        errorMessage = 'Bad request: The server could not understand the request. Please check your permissions and try again.';
+                    } else if (xhr.status === 403) {
+                        errorMessage = 'Access denied: You do not have permission to view this group.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'Not found: The requested group could not be found.';
+                    } else {
+                        errorMessage = 'Error loading group data: ' + error;
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    errorMessage = 'Error loading group data. Please try again.';
+                }
+                
+                showError(errorMessage);
                 $groupContent.removeClass('loading');
             },
             complete: function() {
@@ -88,39 +139,26 @@ jQuery(document).ready(function($) {
 
         // Update students list
         if (data.students && data.students.length > 0) {
-            const studentsHtml = `
-                <h3>Students</h3>
-                <ul class="student-list">
-                    ${data.students.map(student => `
-                        <li class="student-item">
-                            <span class="student-name">${student.name || 'Unknown'}</span>
-                            <a href="mailto:${student.email}" class="student-email">${student.email || ''}</a>
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
+            let studentsHtml = '<ul class="students-list">';
+            data.students.forEach(function(student) {
+                studentsHtml += `<li>${student.name}</li>`;
+            });
+            studentsHtml += '</ul>';
             $studentsList.html(studentsHtml);
         } else {
-            $studentsList.html(`<p class="no-data">No students in this group.</p>`);
+            $studentsList.html('<p>No students in this group.</p>');
         }
 
         // Update courses list
         if (data.courses && data.courses.length > 0) {
-            const coursesHtml = `
-                <h3>Courses</h3>
-                <ul class="course-list">
-                    ${data.courses.map(course => `
-                        <li class="course-item">
-                            <a href="${customDashboard.siteUrl || ''}/courses/${course.id}" class="course-title">
-                                ${course.title || 'Untitled Course'}
-                            </a>
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
+            let coursesHtml = '<ul class="courses-list">';
+            data.courses.forEach(function(course) {
+                coursesHtml += `<li>${course.title}</li>`;
+            });
+            coursesHtml += '</ul>';
             $coursesList.html(coursesHtml);
         } else {
-            $coursesList.html(`<p class="no-data">No courses assigned to this group.</p>`);
+            $coursesList.html('<p>No courses in this group.</p>');
         }
     }
 
@@ -136,7 +174,7 @@ jQuery(document).ready(function($) {
     }
 
     /**
-     * Show an error message
+     * Display an error message
      * @param {string} message - The error message to display
      */
     function showError(message) {
@@ -148,85 +186,17 @@ jQuery(document).ready(function($) {
         `);
     }
 
-    // Handle export buttons
-    $(document).on('click', '#export-summary', function(e) {
-        e.preventDefault();
-        const groupId = $groupSelect.val();
-        if (!groupId) {
-            showError('Please select a group first.');
-            return;
-        }
-        
-        const exportUrl = `${customDashboard.exportUrl}?action=export_teacher_summary&group_id=${groupId}&nonce=${customDashboard.exportNonce}`;
-        console.log('Export URL:', exportUrl); // Debug log
-        triggerExport(exportUrl, $exportStatus);
-    });
-    
-    $(document).on('click', '#export-detailed', function(e) {
-        e.preventDefault();
-        const groupId = $groupSelect.val();
-        if (!groupId) {
-            showError('Please select a group first.');
-            return;
-        }
-        
-        const exportUrl = `${customDashboard.exportUrl}?action=export_detailed_grades&group_id=${groupId}&nonce=${customDashboard.exportNonce}`;
-        console.log('Export URL:', exportUrl); // Debug log
-        triggerExport(exportUrl, $exportStatus);
-    });
-
-    // Initialize
-    if ($groupSelect.val()) {
-        loadGroupData($groupSelect.val());
-        loadGradebookStats($groupSelect.val());
-    }
-
-    // Handle export buttons
-    $exportSummary.on('click', function(e) {
-        e.preventDefault();
-        const groupId = $groupSelect.val();
-        const exportUrl = $(this).data('url') + '&group_id=' + groupId;
-        triggerExport(exportUrl, $exportStatus);
-    });
-
-    $exportDetailed.on('click', function(e) {
-        e.preventDefault();
-        const groupId = $groupSelect.val();
-        const exportUrl = $(this).data('url') + '&group_id=' + groupId;
-        triggerExport(exportUrl, $exportStatus);
-    });
-
-    /**
-     * Trigger file download for export
-     */
-    function triggerExport(url, $statusElement) {
-        $statusElement.text(customDashboard.i18n.exporting).fadeIn();
-        
-        // Create a temporary link element for the download
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.download = ''; // This will make the browser handle the download
-        
-        // Append to body, trigger click, then remove
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Update status
-        $statusElement.text(customDashboard.i18n.exportComplete).delay(2000).fadeOut(1000, function() {
-            $(this).text('');
-        });
-    }
-
     /**
      * Load gradebook statistics for a group
+     * @param {string} groupId - The ID of the group to load statistics for
      */
     function loadGradebookStats(groupId) {
         if (!groupId) return;
         
         // Show loading state
         $gradebookStats.addClass('loading');
+        
+        console.log('Loading gradebook stats for group ID:', groupId);
         
         // Get group average
         $.ajax({
@@ -237,8 +207,10 @@ jQuery(document).ready(function($) {
                 group_id: groupId,
                 nonce: customDashboard.nonce
             },
+            dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                console.log('Group average response:', response);
+                if (response && response.success) {
                     $groupAverage.html(response.data.formatted || 'N/A');
                 } else {
                     console.error('Error getting group average:', response.data);
@@ -246,7 +218,8 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX Error:', status, error);
+                console.error('Group average AJAX Error:', status, error);
+                console.error('Response Text:', xhr.responseText);
                 $groupAverage.html('Error');
             }
         });
@@ -260,8 +233,10 @@ jQuery(document).ready(function($) {
                 group_id: groupId,
                 nonce: customDashboard.nonce
             },
+            dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                console.log('Quiz stats response:', response);
+                if (response && response.success) {
                     updateQuizStats(response.data);
                 } else {
                     console.error('Error getting quiz stats:', response.data);
@@ -270,126 +245,86 @@ jQuery(document).ready(function($) {
                 $gradebookStats.removeClass('loading');
             },
             error: function(xhr, status, error) {
-                console.error('AJAX Error:', status, error);
+                console.error('Quiz stats AJAX Error:', status, error);
+                console.error('Response Text:', xhr.responseText);
                 $quizStats.html('<p>Error loading quiz statistics.</p>');
+                $gradebookStats.removeClass('loading');
+            },
+            complete: function() {
                 $gradebookStats.removeClass('loading');
             }
         });
     }
-    
+
     /**
      * Update the quiz statistics display
+     * @param {Object} stats - Quiz statistics data from the server
      */
     function updateQuizStats(stats) {
+        console.log('Quiz stats data:', stats);
+        
         if (!stats || Object.keys(stats).length === 0) {
             $quizStats.html('<p>No quiz data available for this group.</p>');
             $quizzesCount.text('0');
             return;
         }
         
-        let quizCount = 0;
-        let totalAverage = 0;
-        
         // Create the HTML for quiz stats
         let html = '<div class="quiz-stats-container">';
         
         // Add a table for better data presentation
         html += '<table class="quiz-stats-table">';
-        html += '<thead><tr><th>Quiz</th><th>Average Score</th><th>Attempts</th></tr></thead>';
+        html += '<thead><tr><th>Quiz</th><th>Average Score</th><th>Pass Rate</th><th>Attempts</th></tr></thead>';
         html += '<tbody>';
         
+        // Loop through quizzes
+        let quizCount = 0;
+        let totalAverage = 0;
+        let validQuizzes = 0;
+        
+        // Our new data structure has quiz IDs as keys
         for (const quizId in stats) {
+            if (isNaN(parseInt(quizId))) continue; // Skip non-numeric keys
+            
             const quiz = stats[quizId];
-            if (quiz.average && quiz.average !== 'N/A') {
-                quizCount++;
-                totalAverage += parseFloat(quiz.average);
-                
-                html += `<tr>
-                    <td>${quiz.title || 'Untitled Quiz'}</td>
-                    <td>${quiz.average}%</td>
-                    <td>${quiz.attempts || 0}</td>
-                </tr>`;
+            quizCount++;
+            
+            // Format average score
+            const avgScore = quiz.average !== 'N/A' ? quiz.average + '%' : 'N/A';
+            
+            // Calculate passing rate
+            let passRate = 'N/A';
+            if (quiz.passing_count !== 'N/A' && quiz.total_students > 0) {
+                passRate = Math.round((quiz.passing_count / quiz.total_students) * 100) + '%';
             }
+            
+            // Add to total average calculation
+            if (quiz.average !== 'N/A') {
+                totalAverage += parseFloat(quiz.average);
+                validQuizzes++;
+            }
+            
+            html += `<tr>
+                <td>${quiz.title || 'Untitled Quiz'}</td>
+                <td>${avgScore}</td>
+                <td>${passRate}</td>
+                <td>${quiz.total_attempts || 0}</td>
+            </tr>`;
         }
         
         html += '</tbody></table>';
         
-        // Calculate overall average if we have quizzes
-        if (quizCount > 0) {
-            const overallAverage = (totalAverage / quizCount).toFixed(2);
-            html += `<div class="overall-average">
-                <strong>Overall Average:</strong> ${overallAverage}%
-            </div>`;
-            
-            // Update quizzes count
-            $quizzesCount.text(quizCount);
-        } else {
-            html += '<p>No completed quizzes found for this group.</p>';
-            $quizzesCount.text('0');
-        }
+        // Show overall average
+        const overallAverage = validQuizzes > 0 ? (totalAverage / validQuizzes).toFixed(2) + '%' : 'N/A';
+        html += `<div class="overall-average">
+            <strong>Overall Average:</strong> ${overallAverage}
+        </div>`;
+        
+        // Update quizzes count
+        $quizzesCount.text(quizCount);
         
         html += '</div>'; // Close container
         
         $quizStats.html(html);
-    }
-
-    // Expose functions to global scope for inline event handlers
-    window.loadGroupData = function(groupId) {
-        if (!groupId) return;
-        
-        // Update the group select if needed
-        if ($groupSelect.val() !== groupId) {
-            $groupSelect.val(groupId);
-        }
-        
-        // Load both group data and gradebook stats
-        loadGroupData(groupId);
-        loadGradebookStats(groupId);
-    };
-
-    // Initialize with the first group if available
-    const initialGroupId = $groupSelect.val();
-    if (initialGroupId) {
-        loadGroupData(initialGroupId);
-        loadGradebookStats(initialGroupId);
-    }
-});(function($) {
-    // Handle group selection change
-    $('#group-select').on('change', function() {
-        var groupId = $(this).val();
-        loadGroupContent(groupId);
-    });
-
-    // Load initial group content
-    var initialGroupId = $('#group-select').val();
-    if (initialGroupId) {
-        loadGroupContent(initialGroupId);
-    }
-
-    function loadGroupContent(groupId) {
-        $('.loading').show();
-        $('#group-content').html('<div class="loading">Loading...</div>');
-
-        $.ajax({
-            url: customDashboard.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'load_group_content',
-                group_id: groupId,
-                nonce: customDashboard.nonce
-            },
-            success: function(response) {
-                $('.loading').hide();
-                if (response.success) {
-                    $('#group-content').html(response.data.html);
-                } else {
-                    $('#group-content').html('<p>Error loading group data.</p>');
-                }
-            },
-            error: function() {
-                $('.loading').hide();
-                $('#group-content').html('<p>Error loading group data. Please try again.</p>');
-            }
-        });
     }
 });

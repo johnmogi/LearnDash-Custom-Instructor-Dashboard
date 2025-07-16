@@ -1,12 +1,13 @@
-/* Custom Instructor Dashboard Styles */
+/* Custom Teacher Dashboard Styles */
 
 /* Base Styles */
 .learndash-custom-dashboard {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 2rem;
     color: #333;
+    line-height: 1.5;
 }
 
 /* Header */
@@ -51,54 +52,134 @@
     line-height: 1.5;
 }
 
-/* Group Content */
-#group-content {
+/* Teacher Groups */
+.teacher-groups {
+    margin-bottom: 2rem;
+}
+
+.no-groups-message {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Group Cards */
+.groups-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .groups-list {
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    }
+}
+
+.group-card {
     background: #fff;
     border: 1px solid #dcdcde;
     border-radius: 4px;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
     overflow: hidden;
+    margin-bottom: 2rem;
 }
 
-/* Group Info */
-.group-info {
+/* Group Header */
+.group-header {
     padding: 1.5rem;
     border-bottom: 1px solid #dcdcde;
     background-color: #f6f7f7;
 }
 
-.group-title {
+.group-header h3 {
     margin: 0 0 1rem;
     font-size: 1.5rem;
     font-weight: 600;
     color: #1d2327;
 }
 
-.group-stats {
+.group-meta {
     display: flex;
     gap: 2rem;
+    align-items: center;
 }
 
 .students-count,
-.courses-count {
+.average-score {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.students-count strong,
+.average-score strong {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+/* Group Details */
+.group-details,
+.quiz-statistics {
+    padding: 1.5rem;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.group-details h4,
+.quiz-statistics h4 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.no-data {
+    padding: 1rem;
+    background: #f6f7f7;
+    border-radius: 4px;
+    color: #646970;
     text-align: center;
 }
 
-.students-count .count,
-.courses-count .count {
-    display: block;
-    font-size: 2rem;
-    font-weight: 600;
-    color: #2271b1;
-    line-height: 1;
+/* Tables */
+.students-table,
+.quiz-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
 }
 
-.students-count .label,
-.courses-count .label {
-    font-size: 0.875rem;
-    color: #646970;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.students-table th,
+.quiz-stats-table th {
+    text-align: left;
+    padding: 0.75rem;
+    border-bottom: 2px solid #dcdcde;
+    font-weight: 600;
+    color: #1d2327;
+    background-color: #f6f7f7;
+}
+
+.students-table td,
+.quiz-stats-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.students-table tr:hover,
+.quiz-stats-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Responsive table adjustments */
+@media (max-width: 767px) {
+    .students-table,
+    .quiz-stats-table {
+        display: block;
+        overflow-x: auto;
+    }
 }
 
 /* Students and Courses Sections */
@@ -239,7 +320,106 @@
 .rtl .error-message {
     border-left: none;
     border-right: 4px solid #d63638;
-} Dashboard Styles */
+}
+
+/* Gradebook Stats */
+.gradebook-stats {
+    margin-top: 2rem;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.gradebook-stats h2 {
+    margin: 0;
+    padding: 1.5rem;
+    background-color: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.stats-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.stats-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 1.5rem;
+    background-color: #f6f7f7;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.stats-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: #646970;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.quiz-stats {
+    padding: 1.5rem;
+}
+
+.quiz-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.quiz-stats-table th,
+.quiz-stats-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.quiz-stats-table th {
+    background-color: #f6f7f7;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.overall-average {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f6f7f7;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1.25rem;
+}
+
+.ld-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    color: #646970;
+}
+
+.ld-loading .spinner {
+    margin-right: 0.5rem;
+}
+
+.ld-loading .spinner.is-active {
+    visibility: visible;
+}
+
+/* Custom Dashboard Styles */
 .custom-instructor-dashboard {
     max-width: 1200px;
     margin: 2rem auto;
